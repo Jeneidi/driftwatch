@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DriftWatch | Client-side production ML monitoring</title>
+  <meta name="description" content="Replay a real classifier over temporal batches and compute PSI, KS, Jensen-Shannon, chi-square, performance decay, and Page-Hinkley alerts in the browser.">
+  <meta name="theme-color" content="#0c0e10">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%224%22 fill=%22%230c0e10%22/><path d=%22M5 22h5l3-12 5 16 3-10h6%22 fill=%22none%22 stroke=%22%23ff5c38%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 stroke-linejoin=%22miter%22/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#monitor">Skip to main content</a>
+  <header class="console-header">
+    <div class="header-main">
+      <div class="identity">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M3 21h6l3-12 6 17 3-11h8"/>
+        </svg>
+        <div>
+          <h1 translate="no">DriftWatch</h1>
+          <p>Temporal classifier monitor</p>
+        </div>
+      </div>
+      <dl class="model-meta">
+        <div><dt>MODEL</dt><dd id="model-name">Loading…</dd></div>
+        <div><dt>FIT</dt><dd id="fit-window">Loading…</dd></div>
+        <div><dt>REFERENCE</dt><dd id="reference-window">Loading…</dd></div>
+      </dl>
+      <div id="status-pill" class="status-pill" data-status="loading" aria-live="polite">
+        <span aria-hidden="true"></span>
+        <output id="status-text">LOADING</output>
+      </div>
+    </div>
+    <nav aria-label="Page sections">
+      <a href="#monitor">Monitor</a>
+      <a href="#method">Method</a>
+      <a href="#data">Data</a>
+      <a href="#limitations">Limitations</a>
+      <a href="https://github.com/Jeneidi/driftwatch" target="_blank" rel="noopener noreferrer">Source</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="monitor" class="monitor-shell" aria-labelledby="monitor-title">
+      <div class="monitor-title-row">
+        <div>
+          <p class="eyebrow">LIVE CLIENT-SIDE RECOMPUTATION</p>
+          <h2 id="monitor-title">Production Stream Replay</h2>
+          <p class="lede">Every batch metric and alert below is recomputed from committed predictions, labels, and feature samples. No API key or server is used.</p>
+        </div>
+        <div class="control-deck">
+          <label for="stream-select">
+            Stream
+            <select id="stream-select" name="stream" autocomplete="off">
+              <option value="real">Real months</option>
+              <option value="injected">Synthetic drift, injected for demonstration</option>
+            </select>
+          </label>
+          <label for="psi-threshold">
+            PSI alert at
+            <input id="psi-threshold" name="psi-threshold" type="number" min="0.05" max="1" step="0.01" value="0.25" inputmode="decimal" autocomplete="off">
+          </label>
+          <label for="ks-alpha">
+            KS alpha
+            <input id="ks-alpha" name="ks-alpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05" inputmode="decimal" autocomplete="off">
+          </label>
+        </div>
+      </div>
+
+      <p id="stream-note" class="stream-note" aria-live="polite">Loading committed artifacts…</p>
+      <div id="load-error" class="error-box" role="alert" hidden></div>
+
+      <div class="summary-strip" aria-label="Latest batch summary">
+        <dl>
+          <div><dt>LATEST BATCH</dt><dd id="latest-batch">n/a</dd></div>
+          <div><dt>MAX PSI</dt><dd id="latest-psi">n/a</dd></div>
+          <div><dt>ACCURACY</dt><dd id="latest-accuracy">n/a</dd></div>
+          <div><dt>AUC</dt><dd id="latest-auc">n/a</dd></div>
+          <div><dt>BRIER</dt><dd id="latest-brier">n/a</dd></div>
+          <div><dt>PH SIGNAL</dt><dd id="latest-ph">n/a</dd></div>
+        </dl>
+      </div>
+
+      <section class="panel timeline-panel" aria-labelledby="timeline-title">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-index">01 / FEATURE DRIFT</p>
+            <h2 id="timeline-title">Batch Timeline</h2>
+          </div>
+          <div class="legend" aria-label="Standard PSI interpretation bands">
+            <span><i class="stable" aria-hidden="true"></i>PSI &lt; 0.10 stable</span>
+            <span><i class="warn" aria-hidden="true"></i>0.10-0.25 moderate</span>
+            <span><i class="alert" aria-hidden="true"></i>&gt; 0.25 significant</span>
+          </div>
+        </div>
+        <p class="panel-copy">Select a heat cell to inspect its reference and current distributions. Cell color follows the standard bands; cell text is the exact PSI.</p>
+        <div class="table-scroll timeline-scroll" tabindex="0" aria-label="Feature PSI timeline, horizontally scrollable">
+          <table id="timeline-table" class="timeline-table">
+            <caption class="sr-only">Population Stability Index by feature and temporal batch</caption>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="drill-title">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-index">02 / DISTRIBUTION</p>
+            <h2 id="drill-title">Feature Drill-down</h2>
+          </div>
+          <p id="drill-selection" class="selection-label">Loading…</p>
+        </div>
+        <div class="chart-wrap">
+          <svg id="distribution-chart" class="chart" viewBox="0 0 760 280" role="img" aria-labelledby="distribution-title distribution-desc">
+            <title id="distribution-title">Reference and selected batch distribution</title>
+            <desc id="distribution-desc">Overlaid distributions. Exact values are listed in tables below.</desc>
+          </svg>
+        </div>
+        <div class="table-scroll" tabindex="0" aria-label="Selected feature statistics, horizontally scrollable">
+          <table class="data-table compact">
+            <caption>Selected feature statistics</caption>
+            <thead>
+              <tr>
+                <th scope="col">PSI</th>
+                <th scope="col">JS divergence</th>
+                <th scope="col">KS statistic</th>
+                <th scope="col">KS critical</th>
+                <th scope="col">Chi-square</th>
+                <th scope="col">Chi-square critical</th>
+              </tr>
+            </thead>
+            <tbody id="metric-row"></tbody>
+          </table>
+        </div>
+        <div class="table-scroll distribution-table-wrap" tabindex="0" aria-label="Distribution values, scrollable">
+          <table class="data-table compact">
+            <caption>Distribution values</caption>
+            <thead>
+              <tr><th scope="col">Bin or category</th><th scope="col">Reference share</th><th scope="col">Batch share</th></tr>
+            </thead>
+            <tbody id="distribution-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="performance-title">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-index">03 / MODEL QUALITY</p>
+            <h2 id="performance-title">Performance Decay</h2>
+          </div>
+          <p class="selection-label">Page-Hinkley: delta 0.005, lambda 50, alpha 0.9999</p>
+        </div>
+        <div class="chart-wrap">
+          <svg id="performance-chart" class="chart" viewBox="0 0 980 320" role="img" aria-labelledby="performance-chart-title performance-chart-desc">
+            <title id="performance-chart-title">Accuracy, AUC, and Brier score across batches</title>
+            <desc id="performance-chart-desc">Performance lines with the first Page-Hinkley error-stream change signal marked. Exact values are listed below.</desc>
+          </svg>
+        </div>
+        <div class="metric-legend" aria-label="Performance chart series">
+          <span><i class="accuracy" aria-hidden="true"></i>Accuracy</span>
+          <span><i class="auc" aria-hidden="true"></i>AUC</span>
+          <span><i class="brier" aria-hidden="true"></i>Brier</span>
+          <span><i class="ph" aria-hidden="true"></i>Page-Hinkley signal</span>
+        </div>
+        <div class="table-scroll performance-table-wrap" tabindex="0" aria-label="Performance values, horizontally scrollable">
+          <table class="data-table compact">
+            <caption>Performance values by batch</caption>
+            <thead>
+              <tr>
+                <th scope="col">Batch</th><th scope="col">N</th><th scope="col">Accuracy</th>
+                <th scope="col">AUC</th><th scope="col">Brier</th><th scope="col">Positive rate</th>
+              </tr>
+            </thead>
+            <tbody id="performance-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="alerts-title">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-index">04 / INCIDENT QUEUE</p>
+            <h2 id="alerts-title">Alert Log</h2>
+          </div>
+          <button id="export-alerts" type="button">Export CSV</button>
+        </div>
+        <p class="panel-copy"><span id="alert-count">0</span> computed alerts, newest batch first. Input movement is labeled data drift. Error or quality movement is labeled a concept drift signal.</p>
+        <div class="table-scroll alert-table-wrap" tabindex="0" aria-label="Alert log, scrollable">
+          <table class="data-table alert-table">
+            <caption class="sr-only">Drift alerts</caption>
+            <thead>
+              <tr>
+                <th scope="col">Batch</th><th scope="col">Metric</th><th scope="col">Value</th>
+                <th scope="col">Threshold</th><th scope="col">Drift type</th><th scope="col">Recommended action</th>
+              </tr>
+            </thead>
+            <tbody id="alert-rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="method" class="info-section" aria-labelledby="method-title">
+      <p class="eyebrow">METHOD</p>
+      <h2 id="method-title">What the Monitor Computes</h2>
+      <div class="info-grid">
+        <article>
+          <h3>Population Stability Index</h3>
+          <p><code>PSI = sum((qᵢ - pᵢ) ln(qᵢ / pᵢ))</code>. Numeric reference deciles define fixed bins. Zero shares use a small epsilon. The 0.10 and 0.25 bands are industry heuristics, not calibrated hypothesis tests.</p>
+        </article>
+        <article>
+          <h3>KS &amp; Chi-square</h3>
+          <p>KS is the maximum gap between two empirical CDFs. The two-sided asymptotic critical value is <code>sqrt(-0.5 ln(alpha / 2)) sqrt((n + m) / nm)</code>. Categorical features use a two-sample chi-square homogeneity statistic at alpha 0.05.</p>
+        </article>
+        <article>
+          <h3>Jensen-Shannon divergence</h3>
+          <p><code>JS(P,Q) = 0.5 KL(P||M) + 0.5 KL(Q||M)</code>, where <code>M = (P + Q) / 2</code>. Base-2 logs keep divergence in the closed interval from 0 to 1. This is divergence, not its square-root distance.</p>
+        </article>
+        <article>
+          <h3>Page-Hinkley</h3>
+          <p>The detector reads the sequential 0/1 error stream, maintains a fading cumulative deviation from its running mean, and signals when the gap from its historical minimum exceeds lambda. A signal identifies error-rate change, not its root cause.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="data" class="info-section" aria-labelledby="data-title">
+      <p class="eyebrow">DATA</p>
+      <h2 id="data-title">Real Sessions, Reproducible Artifacts</h2>
+      <div class="info-grid">
+        <article>
+          <h3>Observed Stream</h3>
+          <p>The UCI Online Shoppers Purchasing Intention dataset contains 12,330 sessions and a real month field. The classifier fits on Feb, Mar, and May. June is the untouched reference window. Jul-Dec form the replay stream.</p>
+        </article>
+        <article>
+          <h3>Injected Stream</h3>
+          <p>The second stream is explicitly synthetic. From its midpoint, a seeded transformation shifts product duration and exit rate, then flips 65% of returning-visitor labels. This creates both input drift and a changed input-to-label relationship.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="limitations" class="info-section" aria-labelledby="limitations-title">
+      <p class="eyebrow">LIMITATIONS</p>
+      <h2 id="limitations-title">What This Console Does Not Prove</h2>
+      <ul class="limitations-list">
+        <li>Batch size changes the variance of every statistic and the KS critical value.</li>
+        <li>PSI depends on the June reference bins. Different binning can change its magnitude.</li>
+        <li>The dataset provides month, not event timestamps. Within-month order is the source CSV order.</li>
+        <li>Labels are available immediately. Production label delay and missing outcomes are not modeled.</li>
+        <li>Page-Hinkley detects a change in errors. It cannot separate concept drift from performance loss caused by shifted inputs without further causal analysis.</li>
+        <li>Multiple feature tests increase false-positive risk. Thresholds are investigation triggers, not automatic retraining rules.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>DriftWatch: static, client-side, and free to run. UCI dataset licensed CC BY 4.0.</p>
+    <p>Built by Mohammad Jeneidi.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
