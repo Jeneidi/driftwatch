@@ -1,92 +1,119 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-palette="daylight-teal">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DriftWatch | Client-side production ML monitoring</title>
   <meta name="description" content="Replay a real classifier over temporal batches and compute PSI, KS, Jensen-Shannon, chi-square, performance decay, and Page-Hinkley alerts in the browser.">
-  <meta name="theme-color" content="#0c0e10">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%224%22 fill=%22%230c0e10%22/><path d=%22M5 22h5l3-12 5 16 3-10h6%22 fill=%22none%22 stroke=%22%23ff5c38%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 stroke-linejoin=%22miter%22/></svg>">
-  <link rel="stylesheet" href="styles.css">
+  <meta name="theme-color" content="#f5f7f6">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f5f7f6'/%3E%3Cpath d='M5 22h5l3-12 5 16 3-10h6' fill='none' stroke='%230f6b62' stroke-width='2.4' stroke-linecap='square' stroke-linejoin='miter'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="kit.css">
+  <link rel="stylesheet" href="site.css">
 </head>
 <body>
-  <a class="skip-link" href="#monitor">Skip to main content</a>
-  <header class="console-header">
-    <div class="header-main">
-      <div class="identity">
-        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-          <path d="M3 21h6l3-12 6 17 3-11h8"/>
-        </svg>
-        <div>
-          <h1 translate="no">DriftWatch</h1>
-          <p>Temporal classifier monitor</p>
-        </div>
-      </div>
-      <dl class="model-meta">
-        <div><dt>MODEL</dt><dd id="model-name">Loading…</dd></div>
-        <div><dt>FIT</dt><dd id="fit-window">Loading…</dd></div>
-        <div><dt>REFERENCE</dt><dd id="reference-window">Loading…</dd></div>
-      </dl>
-      <div id="status-pill" class="status-pill" data-status="loading" aria-live="polite">
-        <span aria-hidden="true"></span>
-        <output id="status-text">LOADING</output>
+  <a class="skip" href="#monitor">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="#top">
+        <svg class="glyph" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="1.7" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/><rect x="6.2" y="5" width="2.6" height="14" rx="1.3" fill="currentColor"/><rect x="10.7" y="2" width="2.6" height="20" rx="1.3" fill="currentColor"/><rect x="15.2" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/><rect x="19.7" y="10" width="2.6" height="4" rx="1.3" fill="currentColor"/></svg>
+        <span>DriftWatch</span>
+      </a>
+      <nav class="desk-nav" aria-label="Page sections">
+        <ul class="nav-links">
+          <li><a href="#monitor">Monitor</a></li>
+          <li><a href="#method">Method</a></li>
+          <li><a href="#data">Data</a></li>
+          <li><a href="#limitations">Limitations</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <a class="text-link" href="https://github.com/Jeneidi/driftwatch" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <a class="btn btn-primary header-cta" href="#monitor">Open monitor</a>
+        <button type="button" class="menu-btn" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu"><span></span><span></span><span></span></button>
       </div>
     </div>
-    <nav aria-label="Page sections">
-      <a href="#monitor">Monitor</a>
-      <a href="#method">Method</a>
-      <a href="#data">Data</a>
-      <a href="#limitations">Limitations</a>
-      <a href="https://github.com/Jeneidi/driftwatch" target="_blank" rel="noopener noreferrer">Source</a>
-    </nav>
+    <div class="mobile-nav" id="mobile-menu">
+      <div class="mobile-nav-inner">
+        <ul class="mobile-nav-links">
+          <li><a href="#monitor">Monitor</a></li>
+          <li><a href="#method">Method</a></li>
+          <li><a href="#data">Data</a></li>
+          <li><a href="#limitations">Limitations</a></li>
+          <li><a href="https://github.com/Jeneidi/driftwatch" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+        </ul>
+        <a class="btn btn-primary mobile-nav-cta" href="#monitor">Open monitor</a>
+      </div>
+    </div>
   </header>
 
-  <main>
-    <section id="monitor" class="monitor-shell" aria-labelledby="monitor-title">
-      <div class="monitor-title-row">
+  <main id="main" tabindex="-1">
+    <section class="hero wrap" id="top" aria-labelledby="hero-title">
+      <p class="eyebrow">CLIENT-SIDE PRODUCTION ML MONITORING</p>
+      <div id="status-pill" class="status-pill hero-status" data-status="loading" aria-live="polite"><span aria-hidden="true"></span><output id="status-text">LOADING</output></div>
+      <h1 id="hero-title" class="display">
+        <span class="line"><span>Find the moment </span></span>
+        <span class="line"><span>a model drifts.</span></span>
+      </h1>
+      <p class="lead hero-sub">Replay a real classifier over temporal batches and expose the exact feature, performance, and error-stream changes that make a model quietly wrong.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#monitor">Open the monitor</a>
+        <a class="btn btn-ghost" href="#method">See the method</a>
+      </div>
+      <div class="stats hero-stats model-meta" aria-label="Model summary">
+        <div class="stat"><b id="model-name">Loading…</b><span>Model</span></div>
+        <div class="stat"><b id="fit-window">Loading…</b><span>Fit window</span></div>
+        <div class="stat"><b id="reference-window">Loading…</b><span>Reference window</span></div>
+      </div>
+    </section>
+
+    <section id="monitor" class="section wrap monitor-shell" aria-labelledby="monitor-title">
+      <div class="split monitor-title-row">
         <div>
-          <p class="eyebrow">LIVE CLIENT-SIDE RECOMPUTATION</p>
-          <h2 id="monitor-title">Production Stream Replay</h2>
-          <p class="lede">Every batch metric and alert below is recomputed from committed predictions, labels, and feature samples. No API key or server is used.</p>
+          <p class="eyebrow">LIVE RECOMPUTATION</p>
+          <h2 id="monitor-title" class="h2">Production Stream Replay</h2>
+          <p class="lead">Every batch metric and alert below is recomputed from committed predictions, labels, and feature samples. No API key or server is used.</p>
         </div>
-        <div class="control-deck">
+        <div class="card control-deck">
           <label for="stream-select">
             Stream
-            <select id="stream-select" name="stream" autocomplete="off">
+            <select id="stream-select" class="control" name="stream" autocomplete="off">
               <option value="real">Real months</option>
               <option value="injected">Synthetic drift, injected for demonstration</option>
             </select>
           </label>
           <label for="psi-threshold">
             PSI alert at
-            <input id="psi-threshold" name="psi-threshold" type="number" min="0.05" max="1" step="0.01" value="0.25" inputmode="decimal" autocomplete="off">
+            <input id="psi-threshold" class="control" name="psi-threshold" type="number" min="0.05" max="1" step="0.01" value="0.25" inputmode="decimal" autocomplete="off">
           </label>
           <label for="ks-alpha">
             KS alpha
-            <input id="ks-alpha" name="ks-alpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05" inputmode="decimal" autocomplete="off">
+            <input id="ks-alpha" class="control" name="ks-alpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05" inputmode="decimal" autocomplete="off">
           </label>
         </div>
       </div>
 
-      <p id="stream-note" class="stream-note" aria-live="polite">Loading committed artifacts…</p>
+      <p id="stream-note" class="stream-note" data-injected="false" aria-live="polite">Loading committed artifacts…</p>
       <div id="load-error" class="error-box" role="alert" hidden></div>
 
-      <div class="summary-strip" aria-label="Latest batch summary">
-        <dl>
-          <div><dt>LATEST BATCH</dt><dd id="latest-batch">n/a</dd></div>
-          <div><dt>MAX PSI</dt><dd id="latest-psi">n/a</dd></div>
-          <div><dt>ACCURACY</dt><dd id="latest-accuracy">n/a</dd></div>
-          <div><dt>AUC</dt><dd id="latest-auc">n/a</dd></div>
-          <div><dt>BRIER</dt><dd id="latest-brier">n/a</dd></div>
-          <div><dt>PH SIGNAL</dt><dd id="latest-ph">n/a</dd></div>
-        </dl>
+      <div class="summary-strip stats" aria-label="Latest batch summary">
+        <div class="stat"><b id="latest-batch">n/a</b><span>Latest batch</span></div>
+        <div class="stat"><b id="latest-psi">n/a</b><span>Max PSI</span></div>
+        <div class="stat"><b id="latest-accuracy">n/a</b><span>Accuracy</span></div>
+        <div class="stat"><b id="latest-auc">n/a</b><span>AUC</span></div>
+        <div class="stat"><b id="latest-brier">n/a</b><span>Brier</span></div>
+        <div class="stat"><b id="latest-ph">n/a</b><span>PH signal</span></div>
       </div>
 
-      <section class="panel timeline-panel" aria-labelledby="timeline-title">
+      <section class="card panel timeline-panel" aria-labelledby="timeline-title">
         <div class="panel-heading">
           <div>
-            <p class="panel-index">01 / FEATURE DRIFT</p>
-            <h2 id="timeline-title">Batch Timeline</h2>
+            <p class="eyebrow panel-index">01 / FEATURE DRIFT</p>
+            <h2 id="timeline-title" class="h3">Batch Timeline</h2>
           </div>
           <div class="legend" aria-label="Standard PSI interpretation bands">
             <span><i class="stable" aria-hidden="true"></i>PSI &lt; 0.10 stable</span>
@@ -94,7 +121,7 @@
             <span><i class="alert" aria-hidden="true"></i>&gt; 0.25 significant</span>
           </div>
         </div>
-        <p class="panel-copy">Select a heat cell to inspect its reference and current distributions. Cell color follows the standard bands; cell text is the exact PSI.</p>
+        <p class="panel-copy">Select a heat cell to inspect its reference and current distributions. Cell color follows the standard bands. Cell text is the exact PSI.</p>
         <div class="table-scroll timeline-scroll" tabindex="0" aria-label="Feature PSI timeline, horizontally scrollable">
           <table id="timeline-table" class="timeline-table">
             <caption class="sr-only">Population Stability Index by feature and temporal batch</caption>
@@ -102,11 +129,11 @@
         </div>
       </section>
 
-      <section class="panel" aria-labelledby="drill-title">
+      <section class="card panel" aria-labelledby="drill-title">
         <div class="panel-heading">
           <div>
-            <p class="panel-index">02 / DISTRIBUTION</p>
-            <h2 id="drill-title">Feature Drill-down</h2>
+            <p class="eyebrow panel-index">02 / DISTRIBUTION</p>
+            <h2 id="drill-title" class="h3">Feature Drill-down</h2>
           </div>
           <p id="drill-selection" class="selection-label">Loading…</p>
         </div>
@@ -120,14 +147,7 @@
           <table class="data-table compact">
             <caption>Selected feature statistics</caption>
             <thead>
-              <tr>
-                <th scope="col">PSI</th>
-                <th scope="col">JS divergence</th>
-                <th scope="col">KS statistic</th>
-                <th scope="col">KS critical</th>
-                <th scope="col">Chi-square</th>
-                <th scope="col">Chi-square critical</th>
-              </tr>
+              <tr><th scope="col">PSI</th><th scope="col">JS divergence</th><th scope="col">KS statistic</th><th scope="col">KS critical</th><th scope="col">Chi-square</th><th scope="col">Chi-square critical</th></tr>
             </thead>
             <tbody id="metric-row"></tbody>
           </table>
@@ -135,19 +155,17 @@
         <div class="table-scroll distribution-table-wrap" tabindex="0" aria-label="Distribution values, scrollable">
           <table class="data-table compact">
             <caption>Distribution values</caption>
-            <thead>
-              <tr><th scope="col">Bin or category</th><th scope="col">Reference share</th><th scope="col">Batch share</th></tr>
-            </thead>
+            <thead><tr><th scope="col">Bin or category</th><th scope="col">Reference share</th><th scope="col">Batch share</th></tr></thead>
             <tbody id="distribution-rows"></tbody>
           </table>
         </div>
       </section>
 
-      <section class="panel" aria-labelledby="performance-title">
+      <section class="card panel" aria-labelledby="performance-title">
         <div class="panel-heading">
           <div>
-            <p class="panel-index">03 / MODEL QUALITY</p>
-            <h2 id="performance-title">Performance Decay</h2>
+            <p class="eyebrow panel-index">03 / MODEL QUALITY</p>
+            <h2 id="performance-title" class="h3">Performance Decay</h2>
           </div>
           <p class="selection-label">Page-Hinkley: delta 0.005, lambda 50, alpha 0.9999</p>
         </div>
@@ -166,98 +184,77 @@
         <div class="table-scroll performance-table-wrap" tabindex="0" aria-label="Performance values, horizontally scrollable">
           <table class="data-table compact">
             <caption>Performance values by batch</caption>
-            <thead>
-              <tr>
-                <th scope="col">Batch</th><th scope="col">N</th><th scope="col">Accuracy</th>
-                <th scope="col">AUC</th><th scope="col">Brier</th><th scope="col">Positive rate</th>
-              </tr>
-            </thead>
+            <thead><tr><th scope="col">Batch</th><th scope="col">N</th><th scope="col">Accuracy</th><th scope="col">AUC</th><th scope="col">Brier</th><th scope="col">Positive rate</th></tr></thead>
             <tbody id="performance-rows"></tbody>
           </table>
         </div>
       </section>
 
-      <section class="panel" aria-labelledby="alerts-title">
+      <section class="card panel" aria-labelledby="alerts-title">
         <div class="panel-heading">
           <div>
-            <p class="panel-index">04 / INCIDENT QUEUE</p>
-            <h2 id="alerts-title">Alert Log</h2>
+            <p class="eyebrow panel-index">04 / INCIDENT QUEUE</p>
+            <h2 id="alerts-title" class="h3">Alert Log</h2>
           </div>
-          <button id="export-alerts" type="button">Export CSV</button>
+          <button id="export-alerts" class="btn btn-ghost" type="button">Export CSV</button>
         </div>
         <p class="panel-copy"><span id="alert-count">0</span> computed alerts, newest batch first. Input movement is labeled data drift. Error or quality movement is labeled a concept drift signal.</p>
         <div class="table-scroll alert-table-wrap" tabindex="0" aria-label="Alert log, scrollable">
           <table class="data-table alert-table">
             <caption class="sr-only">Drift alerts</caption>
-            <thead>
-              <tr>
-                <th scope="col">Batch</th><th scope="col">Metric</th><th scope="col">Value</th>
-                <th scope="col">Threshold</th><th scope="col">Drift type</th><th scope="col">Recommended action</th>
-              </tr>
-            </thead>
+            <thead><tr><th scope="col">Batch</th><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Threshold</th><th scope="col">Drift type</th><th scope="col">Recommended action</th></tr></thead>
             <tbody id="alert-rows"></tbody>
           </table>
         </div>
       </section>
     </section>
 
-    <section id="method" class="info-section" aria-labelledby="method-title">
-      <p class="eyebrow">METHOD</p>
-      <h2 id="method-title">What the Monitor Computes</h2>
-      <div class="info-grid">
-        <article>
-          <h3>Population Stability Index</h3>
-          <p><code>PSI = sum((qᵢ - pᵢ) ln(qᵢ / pᵢ))</code>. Numeric reference deciles define fixed bins. Zero shares use a small epsilon. The 0.10 and 0.25 bands are industry heuristics, not calibrated hypothesis tests.</p>
-        </article>
-        <article>
-          <h3>KS &amp; Chi-square</h3>
-          <p>KS is the maximum gap between two empirical CDFs. The two-sided asymptotic critical value is <code>sqrt(-0.5 ln(alpha / 2)) sqrt((n + m) / nm)</code>. Categorical features use a two-sample chi-square homogeneity statistic at alpha 0.05.</p>
-        </article>
-        <article>
-          <h3>Jensen-Shannon divergence</h3>
-          <p><code>JS(P,Q) = 0.5 KL(P||M) + 0.5 KL(Q||M)</code>, where <code>M = (P + Q) / 2</code>. Base-2 logs keep divergence in the closed interval from 0 to 1. This is divergence, not its square-root distance.</p>
-        </article>
-        <article>
-          <h3>Page-Hinkley</h3>
-          <p>The detector reads the sequential 0/1 error stream, maintains a fading cumulative deviation from its running mean, and signals when the gap from its historical minimum exceeds lambda. A signal identifies error-rate change, not its root cause.</p>
-        </article>
+    <section id="method" class="section band" aria-labelledby="method-title">
+      <div class="wrap">
+        <p class="eyebrow">METHOD</p>
+        <h2 id="method-title" class="h2">What the Monitor Computes</h2>
+        <div class="info-grid cards">
+          <article class="card"><h3 class="h3">Population Stability Index</h3><p><code>PSI = sum((qᵢ - pᵢ) ln(qᵢ / pᵢ))</code>. Numeric reference deciles define fixed bins. Zero shares use a small epsilon. The 0.10 and 0.25 bands are industry heuristics, not calibrated hypothesis tests.</p></article>
+          <article class="card"><h3 class="h3">KS &amp; Chi-square</h3><p>KS is the maximum gap between two empirical CDFs. The two-sided asymptotic critical value is <code>sqrt(-0.5 ln(alpha / 2)) sqrt((n + m) / nm)</code>. Categorical features use a two-sample chi-square homogeneity statistic at alpha 0.05.</p></article>
+          <article class="card"><h3 class="h3">Jensen-Shannon divergence</h3><p><code>JS(P,Q) = 0.5 KL(P||M) + 0.5 KL(Q||M)</code>, where <code>M = (P + Q) / 2</code>. Base-2 logs keep divergence in the closed interval from 0 to 1. This is divergence, not its square-root distance.</p></article>
+          <article class="card"><h3 class="h3">Page-Hinkley</h3><p>The detector reads the sequential 0/1 error stream, maintains a fading cumulative deviation from its running mean, and signals when the gap from its historical minimum exceeds lambda. A signal identifies error-rate change, not its root cause.</p></article>
+        </div>
       </div>
     </section>
 
-    <section id="data" class="info-section" aria-labelledby="data-title">
+    <section id="data" class="section wrap" aria-labelledby="data-title">
       <p class="eyebrow">DATA</p>
-      <h2 id="data-title">Real Sessions, Reproducible Artifacts</h2>
-      <div class="info-grid">
-        <article>
-          <h3>Observed Stream</h3>
-          <p>The UCI Online Shoppers Purchasing Intention dataset contains 12,330 sessions and a real month field. The classifier fits on Feb, Mar, and May. June is the untouched reference window. Jul-Dec form the replay stream.</p>
-        </article>
-        <article>
-          <h3>Injected Stream</h3>
-          <p>The second stream is explicitly synthetic. From its midpoint, a seeded transformation shifts product duration and exit rate, then flips 65% of returning-visitor labels. This creates both input drift and a changed input-to-label relationship.</p>
-        </article>
+      <h2 id="data-title" class="h2">Real Sessions, Reproducible Artifacts</h2>
+      <div class="info-grid cards">
+        <article class="card"><h3 class="h3">Observed Stream</h3><p>The UCI Online Shoppers Purchasing Intention dataset contains 12,330 sessions and a real month field. The classifier fits on Feb, Mar, and May. June is the untouched reference window. Jul-Dec form the replay stream.</p></article>
+        <article class="card"><h3 class="h3">Injected Stream</h3><p>The second stream is explicitly synthetic. From its midpoint, a seeded transformation shifts product duration and exit rate, then flips 65% of returning-visitor labels. This creates both input drift and a changed input-to-label relationship.</p></article>
       </div>
     </section>
 
-    <section id="limitations" class="info-section" aria-labelledby="limitations-title">
-      <p class="eyebrow">LIMITATIONS</p>
-      <h2 id="limitations-title">What This Console Does Not Prove</h2>
-      <ul class="limitations-list">
-        <li>Batch size changes the variance of every statistic and the KS critical value.</li>
-        <li>PSI depends on the June reference bins. Different binning can change its magnitude.</li>
-        <li>The dataset provides month, not event timestamps. Within-month order is the source CSV order.</li>
-        <li>Labels are available immediately. Production label delay and missing outcomes are not modeled.</li>
-        <li>Page-Hinkley detects a change in errors. It cannot separate concept drift from performance loss caused by shifted inputs without further causal analysis.</li>
-        <li>Multiple feature tests increase false-positive risk. Thresholds are investigation triggers, not automatic retraining rules.</li>
-      </ul>
+    <section id="limitations" class="section band center" aria-labelledby="limitations-title">
+      <div class="wrap">
+        <p class="eyebrow">LIMITATIONS</p>
+        <h2 id="limitations-title" class="h2">What This Console Does Not Prove</h2>
+        <ul class="limitations-list">
+          <li>Batch size changes the variance of every statistic and the KS critical value.</li>
+          <li>PSI depends on the June reference bins. Different binning can change its magnitude.</li>
+          <li>The dataset provides month, not event timestamps. Within-month order is the source CSV order.</li>
+          <li>Labels are available immediately. Production label delay and missing outcomes are not modeled.</li>
+          <li>Page-Hinkley detects a change in errors. It cannot separate concept drift from performance loss caused by shifted inputs without further causal analysis.</li>
+          <li>Multiple feature tests increase false-positive risk. Thresholds are investigation triggers, not automatic retraining rules.</li>
+        </ul>
+      </div>
     </section>
   </main>
 
-  <footer>
-    <p>DriftWatch: static, client-side, and free to run. UCI dataset licensed CC BY 4.0.</p>
-    <p>Built by Mohammad Jeneidi.</p>
+  <footer class="wrap site-footer">
+    <p class="footer-brand"><svg class="glyph" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="1.7" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/><rect x="6.2" y="5" width="2.6" height="14" rx="1.3" fill="currentColor"/><rect x="10.7" y="2" width="2.6" height="20" rx="1.3" fill="currentColor"/><rect x="15.2" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/><rect x="19.7" y="10" width="2.6" height="4" rx="1.3" fill="currentColor"/></svg>DriftWatch</p>
+    <ul><li><a href="https://github.com/Jeneidi/driftwatch" target="_blank" rel="noopener noreferrer">GitHub</a></li><li><a href="https://mjeneidi.com" target="_blank" rel="noopener noreferrer">mjeneidi.com</a></li></ul>
+    <p>© 2026 Mohammad Jeneidi</p>
   </footer>
 
+  <div class="toast-region" role="status" aria-live="polite"></div>
+  <script src="kit.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
