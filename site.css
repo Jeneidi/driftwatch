@@ -642,3 +642,6 @@ footer.site-footer p:last-child {
     grid-template-columns: 1fr;
   }
 }
+
+/* Light palette: on phones the hero films sit under the text, so they stay faint. */
+@media (max-width: 899px) { .hero .hero-bg video { opacity: 0.22; } }

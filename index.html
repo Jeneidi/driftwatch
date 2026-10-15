@@ -17,7 +17,7 @@
   <header class="site-header">
     <div class="wrap header-row">
       <a class="brand" href="#top">
-        <svg class="glyph" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="1.7" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/><rect x="6.2" y="5" width="2.6" height="14" rx="1.3" fill="currentColor"/><rect x="10.7" y="2" width="2.6" height="20" rx="1.3" fill="currentColor"/><rect x="15.2" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/><rect x="19.7" y="10" width="2.6" height="4" rx="1.3" fill="currentColor"/></svg>
+        <svg class="glyph" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
         <span>DriftWatch</span>
       </a>
       <nav class="desk-nav" aria-label="Page sections">
@@ -53,6 +53,10 @@
 
   <main id="main" tabindex="-1">
     <section class="hero wrap" id="top" aria-labelledby="hero-title">
+      <div class="hero-bg" aria-hidden="true">
+        <video class="hero-bg-left" src="media/hero-left.mp4" poster="media/hero-left.jpg" muted loop playsinline preload="auto"></video>
+        <video class="hero-bg-right" src="media/hero-right.mp4" poster="media/hero-right.jpg" muted loop playsinline preload="auto"></video>
+      </div>
       <p class="eyebrow">CLIENT-SIDE PRODUCTION ML MONITORING</p>
       <div id="status-pill" class="status-pill hero-status" data-status="loading" aria-live="polite"><span aria-hidden="true"></span><output id="status-text">LOADING</output></div>
       <h1 id="hero-title" class="display">
@@ -248,7 +252,7 @@
   </main>
 
   <footer class="wrap site-footer">
-    <p class="footer-brand"><svg class="glyph" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="1.7" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/><rect x="6.2" y="5" width="2.6" height="14" rx="1.3" fill="currentColor"/><rect x="10.7" y="2" width="2.6" height="20" rx="1.3" fill="currentColor"/><rect x="15.2" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/><rect x="19.7" y="10" width="2.6" height="4" rx="1.3" fill="currentColor"/></svg>DriftWatch</p>
+    <p class="footer-brand"><svg class="glyph" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>DriftWatch</p>
     <ul><li><a href="https://github.com/Jeneidi/driftwatch" target="_blank" rel="noopener noreferrer">GitHub</a></li><li><a href="https://mjeneidi.com" target="_blank" rel="noopener noreferrer">mjeneidi.com</a></li></ul>
     <p>© 2026 Mohammad Jeneidi</p>
   </footer>
